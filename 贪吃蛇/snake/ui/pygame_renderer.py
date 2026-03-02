@@ -13,6 +13,11 @@ class GameRenderer:
         self.surface = pygame.display.set_mode((width * cell, height * cell))
         pygame.display.set_caption("Snake")
         self.clock = pygame.time.Clock()
+        self.font = pygame.freetype.SysFont(None, max(14, int(cell * 0.7)))
+        self.last_state = None
+        self.last_action = None
+        self.last_reward = 0.0
+        self.last_score = 0
 
     def draw(self):
         # 单帧绘制：深灰背景、红色食物、绿色蛇体（头部更亮）
@@ -22,6 +27,24 @@ class GameRenderer:
         for i, (x, y) in enumerate(self.env.snake):
             color = (50, 200, 50) if i == 0 else (40, 140, 40)
             pygame.draw.rect(self.surface, color, (x * self.cell, y * self.cell, self.cell, self.cell))
+        # HUD 文字覆盖：状态/动作/奖励
+        hud_x, hud_y = 6, 6
+        action_map = {0: "←(left)", 1: "↑(forward)", 2: "→(right)"}
+        try:
+            if self.last_state is not None:
+                l, f, r, fx_s, fy_s, d = self.last_state
+                self.font.render_to(self.surface, (hud_x, hud_y), f"dir:{self.env.direction} score:{self.env.score}", (230, 230, 230))
+                hud_y += int(self.cell * 0.7)
+                self.font.render_to(self.surface, (hud_x, hud_y), f"danger L/F/R:{l}/{f}/{r}  food fx,fy:{fx_s},{fy_s}  d:{d}", (210, 210, 210))
+                hud_y += int(self.cell * 0.7)
+            if self.last_action is not None:
+                a_txt = action_map.get(self.last_action, str(self.last_action))
+            else:
+                a_txt = "-"
+            self.font.render_to(self.surface, (hud_x, hud_y), f"action:{a_txt}  reward:{self.last_reward:+.3f}", (240, 220, 120))
+        except Exception:
+            # HUD 渲染失败不影响游戏
+            pass
         pygame.display.flip()
 
     def run_human(self, fps=10):
@@ -49,7 +72,12 @@ class GameRenderer:
                         if opposite(self.env.direction) != "RIGHT":
                             desired = "RIGHT"
             a = relative_action(self.env.direction, desired)
-            _, _, done, _ = self.env.step(a)
+            s = self.env.get_state()
+            _, r, done, info = self.env.step(a)
+            self.last_state = s
+            self.last_action = a
+            self.last_reward = r
+            self.last_score = info.get("score", 0)
             self.draw()
             if done:
                 # 一局结束后自动重新开始
@@ -68,7 +96,11 @@ class GameRenderer:
             while not done:
                 s = self.env.get_state()
                 a = agent.act(s, training=False) if isinstance(agent, UnifiedAgent) else agent.act(self.env)
-                _, _, done, _ = self.env.step(a)
+                _, r, done, info = self.env.step(a)
+                self.last_state = s
+                self.last_action = a
+                self.last_reward = r
+                self.last_score = info.get("score", 0)
                 self.draw()
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:

@@ -92,15 +92,15 @@ python main.py plot-png \
 
 - 基础奖励：
   - 吃到食物：`reward_food`（默认 18.0）
-  - 步长惩罚：`reward_step`（默认 −0.005）
+  - 步长惩罚：`reward_step`（默认 −0.0008）
   - 撞墙/撞身终局：`reward_death`（默认 −10.0）
-  - 长时间未吃到食物终止：`reward_timeout`（默认 −5.0）
+  - 长时间未吃到食物终止：`reward_timeout`（默认 −2.0）
 - 目标 Shaping：
   - 接近食物（曼哈顿距离减小）：`reward_closer`（默认 +0.2）
   - 远离食物（曼哈顿距离增大）：`reward_farther`（默认 −0.2）
 - 安全 Shaping：
   - 与身体最小距离变大：`reward_body_farther`（默认 +0.1）
-  - 与身体最小距离变小：`reward_body_closer`（默认 −0.1）
+  - 与身体最小距离变小：`reward_body_closer`（默认 −0.2）
 
 > 奖励实现与参数定义见：[game.py](file:///Users/liyongxi/Desktop/贪吃蛇/snake/game.py)。必要时可将这些系数暴露到 CLI 以便实验对比。
 
